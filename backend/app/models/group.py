@@ -16,9 +16,9 @@ class Group(Base):
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
     creator: Mapped["User"] = relationship(back_populates="groups_created")
-    members: Mapped[list["GroupMember"]] = relationship(back_populates="group")
-    festivals: Mapped[list["GroupFestival"]] = relationship(back_populates="group")
-    invitations: Mapped[list["Invitation"]] = relationship(back_populates="group")
+    members: Mapped[list["GroupMember"]] = relationship(back_populates="group", cascade="all, delete-orphan")
+    festivals: Mapped[list["GroupFestival"]] = relationship(back_populates="group", cascade="all, delete-orphan")
+    invitations: Mapped[list["Invitation"]] = relationship(back_populates="group", cascade="all, delete-orphan")
 
 
 class GroupMember(Base):

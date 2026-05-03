@@ -33,7 +33,7 @@ class GroupFestival(Base):
 
     group: Mapped["Group"] = relationship(back_populates="festivals")
     festival: Mapped["Festival"] = relationship(back_populates="group_festivals")
-    schedules: Mapped[list["UserSchedule"]] = relationship(back_populates="group_festival")
+    schedules: Mapped[list["UserSchedule"]] = relationship(back_populates="group_festival", cascade="all, delete-orphan")
 
 
 class Stage(Base):
