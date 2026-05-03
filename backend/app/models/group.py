@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, String, func
+from sqlalchemy import ForeignKey, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -23,6 +23,7 @@ class Group(Base):
 
 class GroupMember(Base):
     __tablename__ = "group_members"
+    __table_args__ = (UniqueConstraint("group_id", "user_id", name="uq_group_members_group_user"),)
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     group_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("groups.id"), index=True)

@@ -1,7 +1,7 @@
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import Date, ForeignKey, String, Text, func
+from sqlalchemy import Date, ForeignKey, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -24,6 +24,7 @@ class Festival(Base):
 
 class GroupFestival(Base):
     __tablename__ = "group_festivals"
+    __table_args__ = (UniqueConstraint("group_id", "festival_id", name="uq_group_festivals_group_festival"),)
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     group_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("groups.id"), index=True)

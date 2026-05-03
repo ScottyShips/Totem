@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, String, func
+from sqlalchemy import ForeignKey, Index, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -9,6 +9,7 @@ from app.core.database import Base
 
 class Invitation(Base):
     __tablename__ = "invitations"
+    __table_args__ = (Index("ix_invitations_group_status", "group_id", "status"),)
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     group_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("groups.id"), index=True)

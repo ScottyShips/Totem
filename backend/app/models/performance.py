@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -20,6 +20,7 @@ class Artist(Base):
 
 class Performance(Base):
     __tablename__ = "performances"
+    __table_args__ = (Index("ix_performances_festival_start_time", "festival_id", "start_time"),)
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     festival_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("festivals.id"), index=True)
