@@ -30,6 +30,16 @@ class UserLogin(BaseModel):
         return v.lower()
 
 
+class UserUpdate(BaseModel):
+    display_name: str | None = Field(None, min_length=1, max_length=100)
+    avatar_url: str | None = Field(None, max_length=500)
+
+    @field_validator("display_name", mode="before")
+    @classmethod
+    def strip_display_name(cls, v: str | None) -> str | None:
+        return v.strip() if v is not None else v
+
+
 class UserResponse(BaseModel):
     model_config = {"from_attributes": True}
 
