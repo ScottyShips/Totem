@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
 from app.core.security import decode_token
+from app.models.festival import GroupFestival
 from app.models.group import Group, GroupMember
 from app.models.user import User
 
@@ -84,3 +85,27 @@ async def require_group_admin(
     if member.role != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
     return group
+
+
+async def get_group_festival_or_404(
+    gf_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+) -> GroupFestival:
+    result = await db.execute(
+        select(GroupFestival)
+        .where(GroupFestival.id == gf_id)
+        .options(selectinload(GroupFestival.group).selectinload(Group.members))
+    )
+    gf = result.scalar_one_or_none()
+    if gf is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group festival not found")
+    return gf
+
+
+async def require_gf_member(
+    gf: GroupFestival = Depends(get_group_festival_or_404),
+    current_user: User = Depends(get_current_user),
+) -> GroupFestival:
+    if not any(m.user_id == current_user.id for m in gf.group.members):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not a member of this group")
+    return gf
