@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.models.festival import GroupFestival
 from app.models.group import Group, GroupMember
 from app.models.user import User
 from app.schemas.group import GroupCreate, GroupUpdate
@@ -56,3 +57,39 @@ async def delete_group(db: AsyncSession, group: Group) -> None:
     await db.delete(group)
     await db.commit()
     logger.info(f"Group deleted: {group.id}")
+
+
+async def link_festival_to_group(
+    db: AsyncSession, group_id: uuid.UUID, festival_id: uuid.UUID
+) -> GroupFestival | None:
+    existing = await db.execute(
+        select(GroupFestival).where(
+            GroupFestival.group_id == group_id,
+            GroupFestival.festival_id == festival_id,
+        )
+    )
+    if existing.scalar_one_or_none() is not None:
+        return None
+
+    link = GroupFestival(group_id=group_id, festival_id=festival_id)
+    db.add(link)
+    await db.commit()
+
+    result = await db.execute(
+        select(GroupFestival)
+        .where(GroupFestival.id == link.id)
+        .options(selectinload(GroupFestival.festival))
+    )
+    loaded = result.scalar_one()
+    logger.info(f"Festival {festival_id} linked to group {group_id}")
+    return loaded
+
+
+async def get_group_festivals(db: AsyncSession, group_id: uuid.UUID) -> list[GroupFestival]:
+    result = await db.execute(
+        select(GroupFestival)
+        .where(GroupFestival.group_id == group_id)
+        .options(selectinload(GroupFestival.festival))
+        .order_by(GroupFestival.linked_at)
+    )
+    return list(result.scalars().all())

@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -52,4 +52,33 @@ class GroupResponse(BaseModel):
 
 class GroupListResponse(BaseModel):
     data: list[GroupResponse]
+    count: int
+
+
+class GroupFestivalLinkRequest(BaseModel):
+    festival_id: uuid.UUID
+
+
+class LinkedFestivalInfo(BaseModel):
+    model_config = {"from_attributes": True}
+
+    id: uuid.UUID
+    name: str
+    location: str
+    start_date: date
+    end_date: date
+    slug: str
+
+
+class GroupFestivalResponse(BaseModel):
+    model_config = {"from_attributes": True}
+
+    id: uuid.UUID
+    festival_id: uuid.UUID
+    linked_at: datetime
+    festival: LinkedFestivalInfo
+
+
+class GroupFestivalListResponse(BaseModel):
+    data: list[GroupFestivalResponse]
     count: int
