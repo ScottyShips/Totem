@@ -11,7 +11,7 @@ from sqlalchemy import text
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal
 from app.core.limiter import limiter
-from app.routers import auth, groups, users
+from app.routers import auth, festivals, groups, users
 
 
 @asynccontextmanager
@@ -56,6 +56,7 @@ async def add_security_headers(request: Request, call_next: object) -> Response:
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")
 app.include_router(groups.router, prefix="/api/v1")
+app.include_router(festivals.router, prefix="/api/v1")
 
 
 @app.get("/health", include_in_schema=False)
