@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,6 +15,17 @@ class Settings(BaseSettings):
     twilio_from_number: str | None = None
 
     frontend_url: str = "http://localhost:3000"
+
+    @field_validator("database_url")
+    @classmethod
+    def force_asyncpg_driver(cls, v: str) -> str:
+        # Railway hands out postgresql:// (or legacy postgres://); async SQLAlchemy
+        # requires the +asyncpg driver to be named explicitly in the URL.
+        if v.startswith("postgres://"):
+            v = "postgresql://" + v[len("postgres://"):]
+        if v.startswith("postgresql://"):
+            v = "postgresql+asyncpg://" + v[len("postgresql://"):]
+        return v
 
 
 settings = Settings()
