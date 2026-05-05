@@ -74,6 +74,7 @@ class GroupFestivalResponse(BaseModel):
     model_config = {"from_attributes": True}
 
     id: uuid.UUID
+    group_id: uuid.UUID
     festival_id: uuid.UUID
     linked_at: datetime
     festival: LinkedFestivalInfo

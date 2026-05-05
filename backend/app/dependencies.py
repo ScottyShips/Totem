@@ -94,7 +94,10 @@ async def get_group_festival_or_404(
     result = await db.execute(
         select(GroupFestival)
         .where(GroupFestival.id == gf_id)
-        .options(selectinload(GroupFestival.group).selectinload(Group.members))
+        .options(
+            selectinload(GroupFestival.group).selectinload(Group.members),
+            selectinload(GroupFestival.festival),
+        )
     )
     gf = result.scalar_one_or_none()
     if gf is None:

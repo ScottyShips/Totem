@@ -9,6 +9,7 @@ from app.dependencies import get_current_user, require_gf_member
 from app.models.festival import GroupFestival
 from app.models.performance import Performance
 from app.models.user import User
+from app.schemas.group import GroupFestivalResponse
 from app.schemas.schedule import (
     PollResponse,
     UserScheduleCreate,
@@ -19,6 +20,13 @@ from app.schemas.schedule import (
 from app.services import schedule_service
 
 router = APIRouter(prefix="/group-festivals", tags=["schedules"])
+
+
+@router.get("/{gf_id}", response_model=GroupFestivalResponse, status_code=status.HTTP_200_OK)
+async def get_group_festival(
+    gf: GroupFestival = Depends(require_gf_member),
+) -> GroupFestivalResponse:
+    return GroupFestivalResponse.model_validate(gf)
 
 
 @router.get("/{gf_id}/schedules", response_model=UserScheduleListResponse, status_code=status.HTTP_200_OK)

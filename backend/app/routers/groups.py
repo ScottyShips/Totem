@@ -14,7 +14,9 @@ from app.schemas.group import (
     GroupResponse,
     GroupUpdate,
 )
-from app.services import festival_service, group_service
+from app.schemas.invitation import InvitationCreate, InvitationResponse
+from app.services import festival_service, group_service, invitation_service
+from app.services.invitation_service import TwilioError
 
 router = APIRouter(prefix="/groups", tags=["groups"])
 
@@ -89,3 +91,28 @@ async def list_group_festivals(
         data=[GroupFestivalResponse.model_validate(lnk) for lnk in links],
         count=len(links),
     )
+
+
+@router.post(
+    "/{group_id}/invitations",
+    response_model=InvitationResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def send_invitation(
+    body: InvitationCreate,
+    group: Group = Depends(require_group_member),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> InvitationResponse:
+    try:
+        result = await invitation_service.send_invitation(db, group, current_user.id, body.phone_number)
+    except TwilioError:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to send SMS invitation")
+
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="SMS invite limit reached (20 per hour)",
+        )
+
+    return InvitationResponse.model_validate(result)
