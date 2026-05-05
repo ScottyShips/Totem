@@ -1,0 +1,100 @@
+"use client";
+
+import { useState } from "react";
+
+import { ApiError } from "@/lib/api";
+import type { Performance, ScheduleStatus, UserSchedule } from "@/types";
+
+interface Props {
+  performance: Performance;
+  myEntry: UserSchedule | null;
+  onClose: () => void;
+  onSetStatus: (performanceId: string, status: ScheduleStatus) => Promise<void>;
+  onRemove: (performanceId: string) => Promise<void>;
+}
+
+const STATUSES: { value: ScheduleStatus; label: string; description: string }[] = [
+  { value: "attending", label: "Going", description: "You'll be there" },
+  { value: "maybe", label: "Maybe", description: "On the fence" },
+  { value: "skipping", label: "Skipping", description: "Sitting this one out" },
+];
+
+export default function StatusSheet({ performance, myEntry, onClose, onSetStatus, onRemove }: Props) {
+  const [submitting, setSubmitting] = useState<string | null>(null);
+  const [error, setError] = useState("");
+
+  const handleSelect = async (status: ScheduleStatus) => {
+    setError("");
+    setSubmitting(status);
+    try {
+      await onSetStatus(performance.id, status);
+      onClose();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Something went wrong");
+      setSubmitting(null);
+    }
+  };
+
+  const handleRemove = async () => {
+    setError("");
+    setSubmitting("remove");
+    try {
+      await onRemove(performance.id);
+      onClose();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Something went wrong");
+      setSubmitting(null);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/60 flex items-end justify-center z-50"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="bg-zinc-900 border border-zinc-800 rounded-t-2xl px-4 pb-8 pt-5 w-full max-w-lg">
+        <div className="w-10 h-1 rounded-full bg-zinc-700 mx-auto mb-4" />
+
+        <p className="text-zinc-100 font-semibold text-base mb-0.5">{performance.artist.name}</p>
+        <p className="text-zinc-500 text-sm mb-5">{performance.stage.name}</p>
+
+        <div className="space-y-2 mb-4">
+          {STATUSES.map(({ value, label, description }) => {
+            const isActive = myEntry?.status === value;
+            return (
+              <button
+                key={value}
+                onClick={() => handleSelect(value)}
+                disabled={submitting !== null}
+                className={`w-full flex items-center justify-between rounded-xl px-4 py-3 border transition-colors disabled:opacity-50 ${
+                  isActive
+                    ? "bg-amber-500/15 border-amber-500/40 text-amber-400"
+                    : "bg-zinc-800 border-zinc-700 text-zinc-200 hover:bg-zinc-700"
+                }`}
+              >
+                <span className="font-medium text-sm">{label}</span>
+                <span className={`text-xs ${isActive ? "text-amber-500/70" : "text-zinc-500"}`}>
+                  {description}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {myEntry && (
+          <button
+            onClick={handleRemove}
+            disabled={submitting !== null}
+            className="w-full text-sm text-zinc-500 hover:text-red-400 py-2 transition-colors disabled:opacity-50"
+          >
+            {submitting === "remove" ? "Removing…" : "Remove from plan"}
+          </button>
+        )}
+
+        {error && <p className="text-red-400 text-sm text-center mt-2">{error}</p>}
+      </div>
+    </div>
+  );
+}
