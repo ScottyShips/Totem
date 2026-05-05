@@ -8,7 +8,7 @@ import type { Festival, FestivalList } from "@/types";
 interface Props {
   linkedFestivalIds: string[];
   onClose: () => void;
-  onLink: (festivalId: string) => Promise<void>;
+  onLink: (festivalId: string) => Promise<unknown>;
 }
 
 export default function FestivalPicker({ linkedFestivalIds, onClose, onLink }: Props) {
