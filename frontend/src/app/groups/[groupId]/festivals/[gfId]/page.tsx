@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import AuthGuard from "@/components/AuthGuard";
 import PushPrompt from "@/components/PushPrompt";
@@ -9,6 +9,7 @@ import PerformanceRow from "@/components/schedule/PerformanceRow";
 import StatusSheet from "@/components/schedule/StatusSheet";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useSchedule } from "@/hooks/useSchedule";
+import { computeUserConflicts, findConflictsFor } from "@/lib/conflicts";
 import type { Performance } from "@/types";
 
 export default function SchedulePage({
@@ -70,6 +71,16 @@ function ScheduleContent({ groupId, gfId }: { groupId: string; gfId: string }) {
       return () => clearTimeout(id);
     }
   }, [isLoading, error, shouldPrompt]);
+
+  const conflictMap = useMemo(
+    () => computeUserConflicts(performances, schedules, currentUserId),
+    [performances, schedules, currentUserId],
+  );
+
+  const selectedConflicts = useMemo(
+    () => (selected ? findConflictsFor(selected, performances, schedules, currentUserId) : []),
+    [selected, performances, schedules, currentUserId],
+  );
 
   if (isLoading) {
     return (
@@ -150,6 +161,7 @@ function ScheduleContent({ groupId, gfId }: { groupId: string; gfId: string }) {
                     performance={perf}
                     schedules={schedules}
                     currentUserId={currentUserId}
+                    conflicts={conflictMap.get(perf.id) ?? []}
                     onClick={() => setSelected(perf)}
                   />
                 ))}
@@ -162,6 +174,7 @@ function ScheduleContent({ groupId, gfId }: { groupId: string; gfId: string }) {
         <StatusSheet
           performance={selected}
           myEntry={myEntry}
+          conflicts={selectedConflicts}
           onClose={() => setSelected(null)}
           onSetStatus={setStatus}
           onRemove={removeStatus}
