@@ -17,6 +17,7 @@ export interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, displayName: string, password: string) => Promise<void>;
   logout: () => void;
+  updateProfile: (input: { display_name?: string }) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
@@ -75,8 +76,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
+  const updateProfile = async (input: { display_name?: string }): Promise<void> => {
+    const updated = await apiFetch<AuthUser>("/api/v1/users/me", {
+      method: "PATCH",
+      body: input,
+    });
+    setUser(updated);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

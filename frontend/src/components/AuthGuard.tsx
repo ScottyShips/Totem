@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+import AppHeader from "@/components/AppHeader";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -25,5 +26,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (!user) return null;
 
-  return <>{children}</>;
+  return (
+    <>
+      <AppHeader />
+      {children}
+    </>
+  );
 }
