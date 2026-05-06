@@ -371,12 +371,9 @@ These are common areas where AI assistants go wrong. Follow these explicitly:
 ## Git Workflow
 
 - `main` — production branch. Auto-deploys to Vercel + Railway on push.
-- `dev` — active development. All feature work branches from here.
-- Feature branches: `feature/step-4-auth-endpoints`, `feature/step-11-nextjs-setup`, etc.
+- Push commits directly to `main`. This is a solo project with no PR review process; the dev → main flow created friction without protective value.
 - Commit messages: imperative, lowercase, descriptive — `add jwt refresh token rotation`, not `updated stuff`
-- Never commit directly to `main`
 - Never commit `.env` or `.env.local`
-- Pull request from `dev` → `main` only when a full phase checkpoint is met
 
 ---
 
