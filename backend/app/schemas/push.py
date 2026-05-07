@@ -19,13 +19,3 @@ class PushSubscriptionResponse(BaseModel):
     model_config = {"from_attributes": True}
 
     id: uuid.UUID
-
-
-class PushDebugLog(BaseModel):
-    """TEMPORARY — frontend posts a step name as it walks the subscribe flow,
-    so we can see in Railway logs exactly where iOS PWA hangs. Remove this
-    schema along with the /push/debug-log route once the hang is fixed.
-    """
-
-    step: str = Field(..., max_length=100)
-    detail: str | None = Field(None, max_length=1000)

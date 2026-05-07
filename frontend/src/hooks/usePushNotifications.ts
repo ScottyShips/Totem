@@ -18,18 +18,6 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return out;
 }
 
-// TEMPORARY — fire-and-forget step log so we can see in Railway exactly where
-// the iOS PWA push subscribe flow hangs. Remove all `beacon()` call sites and
-// the /push/debug-log route once the root cause is resolved.
-function beacon(step: string, detail?: string): void {
-  apiFetch("/api/v1/push/debug-log", {
-    method: "POST",
-    body: { step, detail: detail ?? null },
-  }).catch(() => {});
-}
-
-// Waits for a service worker to reach the "activated" state. Returns when the
-// SW is active or the worker becomes redundant (failed install).
 function waitForActivation(sw: ServiceWorker): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     if (sw.state === "activated") {
@@ -37,7 +25,6 @@ function waitForActivation(sw: ServiceWorker): Promise<void> {
       return;
     }
     const handler = () => {
-      beacon("sw-statechange", sw.state);
       if (sw.state === "activated") {
         sw.removeEventListener("statechange", handler);
         resolve();
@@ -50,81 +37,45 @@ function waitForActivation(sw: ServiceWorker): Promise<void> {
   });
 }
 
-// Resolves with a registration that has an active SW. iOS PWA can leave behind
-// a "phantom" registration object whose installing/waiting/active slots are
-// all null — `serviceWorker.ready` never resolves in that state. We detect the
-// phantom, unregister it, then register fresh and wait for activation.
+// iOS PWA can leave a "phantom" registration whose installing/waiting/active
+// slots are all null — `serviceWorker.ready` never resolves in that state, so
+// we register explicitly and wait for the registration we got back to activate.
 async function ensureActiveServiceWorker(): Promise<ServiceWorkerRegistration> {
   const existing = await navigator.serviceWorker.getRegistration("/");
   if (existing && !existing.installing && !existing.waiting && !existing.active) {
-    beacon("phantom-detected");
     await existing.unregister();
-    beacon("phantom-unregistered");
   }
 
-  beacon("registering");
   const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-  beacon(
-    "registered",
-    `installing=${reg.installing?.state ?? null} waiting=${reg.waiting?.state ?? null} active=${reg.active?.state ?? null}`,
-  );
-
-  if (reg.active && !reg.installing && !reg.waiting) {
-    return reg;
-  }
+  if (reg.active && !reg.installing && !reg.waiting) return reg;
 
   const sw = reg.installing ?? reg.waiting ?? reg.active;
-  if (!sw) {
-    throw new Error("registration has no sw after register()");
-  }
+  if (!sw) throw new Error("registration has no sw after register()");
   await waitForActivation(sw);
   return reg;
 }
 
 async function registerSubscriptionWithBackend(): Promise<void> {
-  if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-    beacon("unsupported");
-    return;
-  }
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
-  beacon("ensuring-sw");
   const reg = await ensureActiveServiceWorker();
-  beacon("sw-active");
-
   let sub = await reg.pushManager.getSubscription();
-  beacon(sub ? "existing-sub" : "no-sub");
 
   if (!sub) {
-    beacon("fetching-vapid");
     const { public_key } = await apiFetch<{ public_key: string | null }>(
       "/api/v1/push/vapid-public-key",
     );
-    if (!public_key) {
-      beacon("vapid-empty");
-      return;
-    }
-    beacon("vapid-fetched", `len=${public_key.length}`);
-
-    const keyBytes = urlBase64ToUint8Array(public_key);
-    beacon(
-      "vapid-decoded",
-      `bytes=${keyBytes.length} first=0x${keyBytes[0]?.toString(16) ?? "??"}`,
-    );
+    if (!public_key) return;
 
     sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: keyBytes as BufferSource,
+      applicationServerKey: urlBase64ToUint8Array(public_key) as BufferSource,
     });
-    beacon("subscribed");
   }
 
   const json = sub.toJSON();
-  if (!json.endpoint || !json.keys) {
-    beacon("sub-json-incomplete");
-    return;
-  }
+  if (!json.endpoint || !json.keys) return;
 
-  beacon("posting-subscription");
   await apiFetch("/api/v1/push/subscriptions", {
     method: "POST",
     body: {
@@ -132,14 +83,12 @@ async function registerSubscriptionWithBackend(): Promise<void> {
       keys: { p256dh: json.keys.p256dh, auth: json.keys.auth },
     },
   });
-  beacon("posted");
 }
 
-// Wraps registration in a hard timeout so a hang in any underlying step
-// (most commonly `serviceWorker.ready` on iOS PWA) cannot wedge the UI.
-// Module-level in-flight promise dedupes the user-grant call and the
-// permission-effect call that fire concurrently when permission flips to
-// "granted" — without it, both race and we double-register.
+// Hard timeout protects the UI from any hang in the subscribe chain (e.g. iOS
+// PWA edge cases). Module-level in-flight promise dedupes the user-grant call
+// and the permission-effect call that fire concurrently when permission flips
+// to "granted" — without it, both race and we double-register.
 let inFlightRegister: Promise<void> | null = null;
 
 async function registerWithTimeout(): Promise<void> {
@@ -150,8 +99,8 @@ async function registerWithTimeout(): Promise<void> {
   inFlightRegister = (async () => {
     try {
       await Promise.race([registerSubscriptionWithBackend(), timeout]);
-    } catch (err) {
-      beacon("error", err instanceof Error ? err.message : String(err));
+    } catch {
+      // Subscription failure is non-fatal — user can re-trigger via /account later
     } finally {
       inFlightRegister = null;
     }
@@ -193,7 +142,6 @@ export function usePushNotifications() {
       localStorage.setItem(STORAGE_KEY, "true");
     } catch {}
     setAsked(true);
-    beacon("permission-result", result);
 
     if (result === "granted") {
       await registerWithTimeout();
