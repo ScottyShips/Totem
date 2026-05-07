@@ -28,7 +28,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#09090b",
+  themeColor: "#140a23",
 };
 
 export default function RootLayout({
@@ -36,7 +36,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} font-sans antialiased bg-zinc-950 text-zinc-100`}>
+      <body className={`${geistSans.variable} font-sans antialiased text-midnight-100`}>
         <AuthProvider>{children}</AuthProvider>
         <OfflineBanner />
       </body>

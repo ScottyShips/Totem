@@ -36,31 +36,31 @@ export default function InviteModal({ onClose, onSend }: Props) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 w-full max-w-sm">
+      <div className="bg-midnight-900 border border-midnight-800 rounded-xl p-6 w-full max-w-sm">
         {success ? (
           <div className="text-center py-4">
-            <p className="text-zinc-100 font-semibold mb-1">Invitation sent!</p>
-            <p className="text-zinc-400 text-sm mb-4">
+            <p className="text-midnight-100 font-semibold mb-1">Invitation sent!</p>
+            <p className="text-midnight-400 text-sm mb-4">
               They&apos;ll get a text with a link to join.
             </p>
             <button
               onClick={onClose}
-              className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium text-sm rounded-lg py-2.5 transition-colors"
+              className="w-full bg-midnight-800 hover:bg-midnight-700 text-midnight-300 font-medium text-sm rounded-lg py-2.5 transition-colors"
             >
               Done
             </button>
           </div>
         ) : (
           <>
-            <h2 className="text-zinc-100 font-semibold text-lg mb-1">Invite by text</h2>
-            <p className="text-zinc-500 text-sm mb-4">
+            <h2 className="text-midnight-100 font-semibold text-lg mb-1">Invite by text</h2>
+            <p className="text-midnight-500 text-sm mb-4">
               They&apos;ll receive a link to join this group on Totem.
             </p>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label
                   htmlFor="phone"
-                  className="block text-sm font-medium text-zinc-300 mb-1.5"
+                  className="block text-sm font-medium text-midnight-300 mb-1.5"
                 >
                   Phone number
                 </label>
@@ -72,25 +72,25 @@ export default function InviteModal({ onClose, onSend }: Props) {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+15555551234"
-                  className="w-full bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-lg px-3 py-2.5 text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  className="w-full bg-midnight-800 border border-midnight-700 text-midnight-100 rounded-lg px-3 py-2.5 text-sm placeholder:text-midnight-600 focus:outline-none focus:ring-2 focus:ring-iris-500 focus:border-transparent"
                 />
-                <p className="text-zinc-600 text-xs mt-1.5">Include country code — e.g. +1 for US</p>
+                <p className="text-midnight-600 text-xs mt-1.5">Include country code — e.g. +1 for US</p>
               </div>
 
-              {error && <p className="text-red-400 text-sm">{error}</p>}
+              {error && <p className="text-flame-400 text-sm">{error}</p>}
 
               <div className="flex gap-3 pt-1">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium text-sm rounded-lg py-2.5 transition-colors"
+                  className="flex-1 bg-midnight-800 hover:bg-midnight-700 text-midnight-300 font-medium text-sm rounded-lg py-2.5 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting || phone.trim().length === 0}
-                  className="flex-1 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-950 font-semibold text-sm rounded-lg py-2.5 transition-colors"
+                  className="flex-1 bg-iris-500 hover:bg-iris-400 disabled:opacity-50 disabled:cursor-not-allowed text-midnight-950 font-semibold text-sm rounded-lg py-2.5 transition-colors"
                 >
                   {submitting ? "Sending…" : "Send invite"}
                 </button>

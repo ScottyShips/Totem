@@ -18,8 +18,8 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <p className="text-zinc-500 text-sm">Loading…</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-midnight-500 text-sm">Loading…</p>
       </div>
     );
   }

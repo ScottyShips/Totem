@@ -58,20 +58,20 @@ export default function InvitePage({ params }: { params: { token: string } }) {
 
   if (isLoadingInvite || authLoading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <p className="text-zinc-500 text-sm">Loading…</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-midnight-500 text-sm">Loading…</p>
       </div>
     );
   }
 
   if (loadError) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center px-4 text-center">
-        <h1 className="text-2xl font-bold text-zinc-100 mb-2">Invitation unavailable</h1>
-        <p className="text-zinc-400 text-sm mb-8">{loadError}</p>
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 text-center">
+        <h1 className="text-2xl font-bold text-midnight-100 mb-2">Invitation unavailable</h1>
+        <p className="text-midnight-400 text-sm mb-8">{loadError}</p>
         <Link
           href="/groups"
-          className="bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold text-sm rounded-lg px-6 py-2.5 transition-colors"
+          className="bg-iris-500 hover:bg-iris-400 text-midnight-950 font-semibold text-sm rounded-lg px-6 py-2.5 transition-colors"
         >
           Go to Totem
         </Link>
@@ -82,28 +82,28 @@ export default function InvitePage({ params }: { params: { token: string } }) {
   const redirectParam = encodeURIComponent(`/invite/${token}`);
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-sm text-center">
-        <p className="text-zinc-500 text-sm mb-2">You&apos;ve been invited to join</p>
-        <h1 className="text-3xl font-bold text-zinc-100 mb-8">{invite!.group.name}</h1>
+        <p className="text-midnight-500 text-sm mb-2">You&apos;ve been invited to join</p>
+        <h1 className="text-3xl font-bold text-midnight-100 mb-8">{invite!.group.name}</h1>
 
         {user ? (
           <>
             <button
               onClick={handleJoin}
               disabled={isJoining}
-              className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-950 font-semibold rounded-lg py-3 text-sm transition-colors"
+              className="w-full bg-iris-500 hover:bg-iris-400 disabled:opacity-50 disabled:cursor-not-allowed text-midnight-950 font-semibold rounded-lg py-3 text-sm transition-colors"
             >
               {isJoining ? "Joining…" : "Join group"}
             </button>
 
-            {joinError && <p className="text-red-400 text-sm mt-3">{joinError}</p>}
+            {joinError && <p className="text-flame-400 text-sm mt-3">{joinError}</p>}
 
-            <p className="text-zinc-600 text-xs mt-5">
+            <p className="text-midnight-600 text-xs mt-5">
               Signed in as {user.display_name}.{" "}
               <button
                 onClick={logout}
-                className="text-zinc-400 hover:text-zinc-200 underline underline-offset-2 transition-colors"
+                className="text-midnight-400 hover:text-midnight-200 underline underline-offset-2 transition-colors"
               >
                 Not you?
               </button>
@@ -111,19 +111,19 @@ export default function InvitePage({ params }: { params: { token: string } }) {
           </>
         ) : (
           <>
-            <p className="text-zinc-400 text-sm mb-6">
+            <p className="text-midnight-400 text-sm mb-6">
               Sign in or create an account to join.
             </p>
             <div className="space-y-3">
               <Link
                 href={`/login?redirect=${redirectParam}`}
-                className="block w-full bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold rounded-lg py-3 text-sm transition-colors"
+                className="block w-full bg-iris-500 hover:bg-iris-400 text-midnight-950 font-semibold rounded-lg py-3 text-sm transition-colors"
               >
                 Sign in
               </Link>
               <Link
                 href={`/register?redirect=${redirectParam}`}
-                className="block w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium rounded-lg py-3 text-sm transition-colors"
+                className="block w-full bg-midnight-800 hover:bg-midnight-700 text-midnight-300 font-medium rounded-lg py-3 text-sm transition-colors"
               >
                 Create account
               </Link>

@@ -87,13 +87,13 @@ function ScheduleContent({ groupId, gfId }: { groupId: string; gfId: string }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-zinc-950 px-4 py-8 max-w-lg mx-auto">
-        <div className="h-4 w-16 bg-zinc-800 rounded animate-pulse mb-8" />
-        <div className="h-7 w-48 bg-zinc-800 rounded animate-pulse mb-2" />
-        <div className="h-4 w-32 bg-zinc-800 rounded animate-pulse mb-10" />
+      <div className="min-h-screen px-4 py-8 max-w-lg mx-auto">
+        <div className="h-4 w-16 bg-midnight-800 rounded animate-pulse mb-8" />
+        <div className="h-7 w-48 bg-midnight-800 rounded animate-pulse mb-2" />
+        <div className="h-4 w-32 bg-midnight-800 rounded animate-pulse mb-10" />
         <div className="space-y-2">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-16 bg-zinc-900 border border-zinc-800 rounded-xl animate-pulse" />
+            <div key={i} className="h-16 bg-midnight-900 border border-midnight-800 rounded-xl animate-pulse" />
           ))}
         </div>
       </div>
@@ -102,8 +102,8 @@ function ScheduleContent({ groupId, gfId }: { groupId: string; gfId: string }) {
 
   if (error || !festival) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <p className="text-red-400 text-sm">{error ?? "Not found"}</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-flame-400 text-sm">{error ?? "Not found"}</p>
       </div>
     );
   }
@@ -135,10 +135,18 @@ function ScheduleContent({ groupId, gfId }: { groupId: string; gfId: string }) {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 px-4 py-8 max-w-lg mx-auto">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Ambient aurora — cool iris up top, warm sunset glow at the bottom-right
+          like the festival sun setting. Cool→warm gives the page a dusk feel. */}
+      <div className="aurora-blob bg-iris-500 w-[480px] h-[480px] -top-40 -right-32 opacity-25" aria-hidden="true" />
+      <div className="aurora-blob bg-bloom-500 w-[320px] h-[320px] top-1/3 -left-32 opacity-20" aria-hidden="true" />
+      <div className="aurora-blob bg-sunset-500 w-[420px] h-[420px] -bottom-40 -right-24 opacity-25" aria-hidden="true" />
+      <div className="aurora-blob bg-gold-400 w-[260px] h-[260px] bottom-10 left-1/3 opacity-10" aria-hidden="true" />
+
+      <div className="relative px-4 py-8 max-w-lg mx-auto">
       <Link
         href={`/groups/${groupId}`}
-        className="inline-flex items-center gap-1.5 text-zinc-500 hover:text-zinc-200 text-sm mb-8 transition-colors"
+        className="inline-flex items-center gap-1.5 text-midnight-400 hover:text-iris-300 text-sm mb-8 transition-colors"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -147,10 +155,17 @@ function ScheduleContent({ groupId, gfId }: { groupId: string; gfId: string }) {
       </Link>
 
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-zinc-100">{festival.name}</h1>
-        <p className="text-zinc-500 text-sm mt-1">{festival.location}</p>
+        <h1 className="text-3xl font-black tracking-tight aurora-text inline-block leading-tight">{festival.name}</h1>
+        <p className="text-sunset-300 text-sm mt-1 font-medium flex items-center gap-1.5">
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+          </svg>
+          {festival.location}
+        </p>
         {lastSyncedAt && (
-          <p className="text-zinc-700 text-xs mt-2">
+          <p className="text-spark-400/70 text-xs mt-2 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-spark-400 animate-pulse" />
             Synced {formatSyncTime(lastSyncedAt)}
           </p>
         )}
@@ -160,7 +175,7 @@ function ScheduleContent({ groupId, gfId }: { groupId: string; gfId: string }) {
             <button
               onClick={handleExport}
               disabled={exporting}
-              className="inline-flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-200 text-xs font-medium rounded-lg px-3 py-1.5 transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 bg-gradient-to-r from-sunset-500/20 to-gold-400/20 hover:from-sunset-500/30 hover:to-gold-400/30 border border-sunset-400/40 hover:border-sunset-400/60 text-sunset-200 text-xs font-semibold rounded-lg px-3 py-1.5 transition-all disabled:opacity-50"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
@@ -170,7 +185,7 @@ function ScheduleContent({ groupId, gfId }: { groupId: string; gfId: string }) {
                 : `Save ${attendingCount} ${attendingCount === 1 ? "show" : "shows"} to calendar`}
             </button>
             {exportError && (
-              <p className="text-rose-400 text-xs mt-2">{exportError}</p>
+              <p className="text-flame-400 text-xs mt-2">{exportError}</p>
             )}
           </div>
         )}
@@ -178,22 +193,22 @@ function ScheduleContent({ groupId, gfId }: { groupId: string; gfId: string }) {
 
       {days.length === 0 && (
         <div className="text-center py-20">
-          <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-5">
-            <svg className="w-7 h-7 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-sunset-500/30 to-bloom-500/30 border border-sunset-400/30 flex items-center justify-center mx-auto mb-5 shadow-lg shadow-sunset-500/20">
+            <svg className="w-7 h-7 text-sunset-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z" />
             </svg>
           </div>
-          <p className="text-zinc-400 text-sm">No performances scheduled yet.</p>
+          <p className="text-midnight-100 text-sm font-medium">No performances scheduled yet.</p>
         </div>
       )}
 
       <div className="space-y-8">
         {days.map(([day, perfs]) => (
           <section key={day}>
-            {/* Day heading with trailing divider line */}
-            <h2 className="flex items-center gap-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">
-              <span className="whitespace-nowrap">{formatDayHeading(day)}</span>
-              <span className="flex-1 h-px bg-zinc-800" />
+            {/* Day heading — aurora gradient with luminous divider */}
+            <h2 className="flex items-center gap-3 text-sm font-bold uppercase tracking-wider mb-3">
+              <span className="whitespace-nowrap aurora-text">{formatDayHeading(day)}</span>
+              <span className="flex-1 h-px bg-gradient-to-r from-iris-500/40 via-bloom-500/20 to-transparent" />
             </h2>
             <div className="space-y-2">
               {perfs
@@ -237,6 +252,7 @@ function ScheduleContent({ groupId, gfId }: { groupId: string; gfId: string }) {
           }}
         />
       )}
+      </div>
     </div>
   );
 }

@@ -45,19 +45,19 @@ export default function FestivalPicker({ linkedFestivalIds, onClose, onLink }: P
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 w-full max-w-sm">
-        <h2 className="text-zinc-100 font-semibold text-lg mb-4">Add festival</h2>
+      <div className="bg-midnight-900 border border-midnight-800 rounded-xl p-6 w-full max-w-sm">
+        <h2 className="text-midnight-100 font-semibold text-lg mb-4">Add festival</h2>
 
         {isLoading && (
-          <p className="text-zinc-500 text-sm text-center py-4">Loading…</p>
+          <p className="text-midnight-500 text-sm text-center py-4">Loading…</p>
         )}
 
         {!isLoading && error && (
-          <p className="text-red-400 text-sm mb-3">{error}</p>
+          <p className="text-flame-400 text-sm mb-3">{error}</p>
         )}
 
         {!isLoading && !error && available.length === 0 && (
-          <p className="text-zinc-400 text-sm text-center py-4">
+          <p className="text-midnight-400 text-sm text-center py-4">
             All available festivals are already linked.
           </p>
         )}
@@ -69,10 +69,10 @@ export default function FestivalPicker({ linkedFestivalIds, onClose, onLink }: P
                 <button
                   onClick={() => handlePick(festival.id)}
                   disabled={submitting !== null}
-                  className="w-full text-left bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg px-4 py-3 transition-colors disabled:opacity-50"
+                  className="w-full text-left bg-midnight-800 hover:bg-midnight-700 border border-midnight-700 rounded-lg px-4 py-3 transition-colors disabled:opacity-50"
                 >
-                  <p className="text-zinc-100 font-medium text-sm">{festival.name}</p>
-                  <p className="text-zinc-500 text-xs mt-0.5">
+                  <p className="text-midnight-100 font-medium text-sm">{festival.name}</p>
+                  <p className="text-midnight-500 text-xs mt-0.5">
                     {festival.location} · {new Date(festival.start_date).getFullYear()}
                   </p>
                 </button>
@@ -83,7 +83,7 @@ export default function FestivalPicker({ linkedFestivalIds, onClose, onLink }: P
 
         <button
           onClick={onClose}
-          className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium text-sm rounded-lg py-2.5 transition-colors"
+          className="w-full bg-midnight-800 hover:bg-midnight-700 text-midnight-300 font-medium text-sm rounded-lg py-2.5 transition-colors"
         >
           Cancel
         </button>

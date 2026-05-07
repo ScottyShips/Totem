@@ -12,14 +12,14 @@ export default function MemberList({ members, currentUserId }: Props) {
       {members.map((member) => (
         <li key={member.id} className="flex items-center gap-3 py-1">
           <Avatar name={member.user.display_name} size="sm" />
-          <span className="text-zinc-100 text-sm flex-1 leading-snug">
+          <span className="text-midnight-50 text-sm flex-1 leading-snug font-medium">
             {member.user.display_name}
             {member.user_id === currentUserId && (
-              <span className="text-zinc-500 ml-1">(you)</span>
+              <span className="text-spark-300 ml-1.5 text-xs font-semibold">you</span>
             )}
           </span>
           {member.role === "admin" && (
-            <span className="text-xs text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full font-medium">
+            <span className="text-[10px] uppercase tracking-wider font-bold bg-gradient-to-r from-gold-400 to-sunset-500 text-midnight-950 px-2 py-0.5 rounded-full">
               admin
             </span>
           )}

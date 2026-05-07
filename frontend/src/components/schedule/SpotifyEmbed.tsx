@@ -48,7 +48,7 @@ export default function SpotifyEmbed({ artist }: Props) {
   }
 
   if (state.kind === "loading") {
-    return <div className="mb-4 h-[152px] rounded-xl bg-zinc-800/50 animate-pulse" />;
+    return <div className="mb-4 h-[152px] rounded-xl bg-midnight-800/50 animate-pulse" />;
   }
 
   return (

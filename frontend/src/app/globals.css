@@ -4,8 +4,18 @@
 
 html,
 body {
-  background-color: #09090b;
-  color: #fafafa;
+  /* Warm dusk-purple base + four corner color washes. Gives the entire app
+     visible color before any content paints — no more "black canvas with
+     hints of color", instead a permanent twilight gradient. Fixed attachment
+     so it doesn't repeat as you scroll. */
+  background-color: #140a23;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(167, 139, 250, 0.18) 0%, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(244, 114, 182, 0.14) 0%, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(251, 146, 60, 0.18) 0%, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(56, 189, 248, 0.10) 0%, transparent 50%);
+  background-attachment: fixed;
+  color: #ebe4f5;
 }
 
 body {
@@ -18,5 +28,49 @@ body {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Aurora wordmark — gradient text with a slow drift so it feels alive
+     without distracting. Animation is purely cosmetic; reduces to static
+     for users with prefers-reduced-motion. */
+  .aurora-text {
+    background: linear-gradient(
+      120deg,
+      #a78bfa 0%,
+      #f472b6 35%,
+      #38bdf8 70%,
+      #a78bfa 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: aurora-shift 8s ease-in-out infinite;
+  }
+
+  @keyframes aurora-shift {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .aurora-text {
+      animation: none;
+    }
+  }
+
+  /* Soft floating blobs for hero backgrounds. Placed absolutely; pair with
+     a `relative overflow-hidden` parent. */
+  .aurora-blob {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(80px);
+    opacity: 0.45;
+    pointer-events: none;
   }
 }
