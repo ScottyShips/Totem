@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import SpotifyEmbed from "@/components/schedule/SpotifyEmbed";
 import { ApiError } from "@/lib/api";
 import type { Performance, ScheduleStatus, UserSchedule } from "@/types";
 
@@ -65,6 +66,8 @@ export default function StatusSheet({ performance, myEntry, conflicts, onClose, 
 
         <p className="text-zinc-100 font-semibold text-base mb-0.5">{performance.artist.name}</p>
         <p className="text-zinc-500 text-sm mb-5">{performance.stage.name}</p>
+
+        <SpotifyEmbed artist={performance.artist} />
 
         {conflicts.length > 0 && (
           <div className="mb-4 rounded-xl bg-rose-500/10 border border-rose-500/20 px-4 py-3">

@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     twilio_auth_token: str | None = None
     twilio_from_number: str | None = None
 
+    spotify_client_id: str | None = None
+    spotify_client_secret: str | None = None
+
     frontend_url: str = "http://localhost:3000"
 
     @field_validator("database_url")

@@ -14,6 +14,7 @@ class Artist(Base):
     name: Mapped[str] = mapped_column(String(100))
     genre: Mapped[str | None] = mapped_column(String(100))
     image_url: Mapped[str | None] = mapped_column(String(500))
+    spotify_id: Mapped[str | None] = mapped_column(String(64))
 
     performances: Mapped[list["Performance"]] = relationship(back_populates="artist")
 

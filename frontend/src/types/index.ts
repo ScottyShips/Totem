@@ -82,6 +82,11 @@ export interface Artist {
   name: string;
   genre: string | null;
   image_url: string | null;
+  spotify_id: string | null;
+}
+
+export interface ArtistSpotifyResponse {
+  spotify_id: string | null;
 }
 
 export interface Performance {

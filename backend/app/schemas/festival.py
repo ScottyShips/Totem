@@ -19,6 +19,11 @@ class ArtistResponse(BaseModel):
     name: str
     genre: str | None
     image_url: str | None
+    spotify_id: str | None
+
+
+class ArtistSpotifyResponse(BaseModel):
+    spotify_id: str | None
 
 
 class PerformanceResponse(BaseModel):
