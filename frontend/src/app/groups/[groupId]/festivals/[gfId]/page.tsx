@@ -228,8 +228,8 @@ function ScheduleContent({ groupId, gfId }: { groupId: string; gfId: string }) {
       {showPushPrompt && (
         <PushPrompt
           onGrant={async () => {
-            await requestPermission();
             setShowPushPrompt(false);
+            await requestPermission();
           }}
           onDismiss={() => {
             dismiss();

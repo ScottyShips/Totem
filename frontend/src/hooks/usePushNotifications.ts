@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 
 const STORAGE_KEY = "totem:notif:asked";
+const SUBSCRIBE_TIMEOUT_MS = 8000;
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   // Browser PushManager.subscribe requires the VAPID public key as a Uint8Array,
@@ -17,27 +18,54 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return out;
 }
 
-async function registerSubscriptionWithBackend(): Promise<void> {
-  if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+// TEMPORARY — fire-and-forget step log so we can see in Railway exactly where
+// the iOS PWA push subscribe flow hangs. Remove all `beacon()` call sites and
+// the /push/debug-log route once the root cause is resolved.
+function beacon(step: string, detail?: string): void {
+  apiFetch("/api/v1/push/debug-log", {
+    method: "POST",
+    body: { step, detail: detail ?? null },
+  }).catch(() => {});
+}
 
+async function registerSubscriptionWithBackend(): Promise<void> {
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+    beacon("unsupported");
+    return;
+  }
+
+  beacon("awaiting-sw-ready");
   const reg = await navigator.serviceWorker.ready;
+  beacon("sw-ready");
+
   let sub = await reg.pushManager.getSubscription();
+  beacon(sub ? "existing-sub" : "no-sub");
 
   if (!sub) {
+    beacon("fetching-vapid");
     const { public_key } = await apiFetch<{ public_key: string | null }>(
       "/api/v1/push/vapid-public-key",
     );
-    if (!public_key) return;
+    if (!public_key) {
+      beacon("vapid-empty");
+      return;
+    }
+    beacon("vapid-fetched");
 
     sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(public_key) as BufferSource,
     });
+    beacon("subscribed");
   }
 
   const json = sub.toJSON();
-  if (!json.endpoint || !json.keys) return;
+  if (!json.endpoint || !json.keys) {
+    beacon("sub-json-incomplete");
+    return;
+  }
 
+  beacon("posting-subscription");
   await apiFetch("/api/v1/push/subscriptions", {
     method: "POST",
     body: {
@@ -45,6 +73,20 @@ async function registerSubscriptionWithBackend(): Promise<void> {
       keys: { p256dh: json.keys.p256dh, auth: json.keys.auth },
     },
   });
+  beacon("posted");
+}
+
+// Wraps registration in a hard timeout so a hang in any underlying step
+// (most commonly `serviceWorker.ready` on iOS PWA) cannot wedge the UI.
+async function registerWithTimeout(): Promise<void> {
+  const timeout = new Promise<void>((_, reject) =>
+    setTimeout(() => reject(new Error("subscribe-timeout")), SUBSCRIBE_TIMEOUT_MS),
+  );
+  try {
+    await Promise.race([registerSubscriptionWithBackend(), timeout]);
+  } catch (err) {
+    beacon("error", err instanceof Error ? err.message : String(err));
+  }
 }
 
 export function usePushNotifications() {
@@ -68,7 +110,7 @@ export function usePushNotifications() {
   // backend has their subscription. Cheap idempotent operation.
   useEffect(() => {
     if (supported && permission === "granted") {
-      registerSubscriptionWithBackend().catch(() => {});
+      registerWithTimeout();
     }
   }, [supported, permission]);
 
@@ -81,13 +123,10 @@ export function usePushNotifications() {
       localStorage.setItem(STORAGE_KEY, "true");
     } catch {}
     setAsked(true);
+    beacon("permission-result", result);
 
     if (result === "granted") {
-      try {
-        await registerSubscriptionWithBackend();
-      } catch {
-        // Subscription failure is non-fatal — user can re-trigger via /account later
-      }
+      await registerWithTimeout();
     }
   }, []);
 
