@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 
 const STORAGE_KEY = "totem:notif:asked";
-const SUBSCRIBE_TIMEOUT_MS = 8000;
+const SUBSCRIBE_TIMEOUT_MS = 15000;
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   // Browser PushManager.subscribe requires the VAPID public key as a Uint8Array,
@@ -28,46 +28,68 @@ function beacon(step: string, detail?: string): void {
   }).catch(() => {});
 }
 
+// Waits for a service worker to reach the "activated" state. Returns when the
+// SW is active or the worker becomes redundant (failed install).
+function waitForActivation(sw: ServiceWorker): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    if (sw.state === "activated") {
+      resolve();
+      return;
+    }
+    const handler = () => {
+      beacon("sw-statechange", sw.state);
+      if (sw.state === "activated") {
+        sw.removeEventListener("statechange", handler);
+        resolve();
+      } else if (sw.state === "redundant") {
+        sw.removeEventListener("statechange", handler);
+        reject(new Error("sw-redundant"));
+      }
+    };
+    sw.addEventListener("statechange", handler);
+  });
+}
+
+// Resolves with a registration that has an active SW. iOS PWA can leave behind
+// a "phantom" registration object whose installing/waiting/active slots are
+// all null — `serviceWorker.ready` never resolves in that state. We detect the
+// phantom, unregister it, then register fresh and wait for activation.
+async function ensureActiveServiceWorker(): Promise<ServiceWorkerRegistration> {
+  const existing = await navigator.serviceWorker.getRegistration("/");
+  if (existing && !existing.installing && !existing.waiting && !existing.active) {
+    beacon("phantom-detected");
+    await existing.unregister();
+    beacon("phantom-unregistered");
+  }
+
+  beacon("registering");
+  const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+  beacon(
+    "registered",
+    `installing=${reg.installing?.state ?? null} waiting=${reg.waiting?.state ?? null} active=${reg.active?.state ?? null}`,
+  );
+
+  if (reg.active && !reg.installing && !reg.waiting) {
+    return reg;
+  }
+
+  const sw = reg.installing ?? reg.waiting ?? reg.active;
+  if (!sw) {
+    throw new Error("registration has no sw after register()");
+  }
+  await waitForActivation(sw);
+  return reg;
+}
+
 async function registerSubscriptionWithBackend(): Promise<void> {
   if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
     beacon("unsupported");
     return;
   }
 
-  // TEMPORARY DIAGNOSTIC — probe SW registration state before awaiting ready,
-  // so we can tell "never registered" apart from "registered but not active".
-  try {
-    const existing = await navigator.serviceWorker.getRegistration();
-    if (existing) {
-      const snapshot = {
-        scope: existing.scope,
-        installing: existing.installing?.state ?? null,
-        waiting: existing.waiting?.state ?? null,
-        active: existing.active?.state ?? null,
-      };
-      beacon("existing-registration", JSON.stringify(snapshot));
-    } else {
-      beacon("no-registration");
-      try {
-        const fresh = await navigator.serviceWorker.register("/sw.js");
-        beacon("explicit-register-ok", `scope=${fresh.scope}`);
-      } catch (err) {
-        beacon(
-          "explicit-register-failed",
-          err instanceof Error ? `${err.name}: ${err.message}` : String(err),
-        );
-      }
-    }
-  } catch (err) {
-    beacon(
-      "registration-probe-failed",
-      err instanceof Error ? `${err.name}: ${err.message}` : String(err),
-    );
-  }
-
-  beacon("awaiting-sw-ready");
-  const reg = await navigator.serviceWorker.ready;
-  beacon("sw-ready");
+  beacon("ensuring-sw");
+  const reg = await ensureActiveServiceWorker();
+  beacon("sw-active");
 
   let sub = await reg.pushManager.getSubscription();
   beacon(sub ? "existing-sub" : "no-sub");
@@ -109,15 +131,26 @@ async function registerSubscriptionWithBackend(): Promise<void> {
 
 // Wraps registration in a hard timeout so a hang in any underlying step
 // (most commonly `serviceWorker.ready` on iOS PWA) cannot wedge the UI.
+// Module-level in-flight promise dedupes the user-grant call and the
+// permission-effect call that fire concurrently when permission flips to
+// "granted" — without it, both race and we double-register.
+let inFlightRegister: Promise<void> | null = null;
+
 async function registerWithTimeout(): Promise<void> {
+  if (inFlightRegister) return inFlightRegister;
   const timeout = new Promise<void>((_, reject) =>
     setTimeout(() => reject(new Error("subscribe-timeout")), SUBSCRIBE_TIMEOUT_MS),
   );
-  try {
-    await Promise.race([registerSubscriptionWithBackend(), timeout]);
-  } catch (err) {
-    beacon("error", err instanceof Error ? err.message : String(err));
-  }
+  inFlightRegister = (async () => {
+    try {
+      await Promise.race([registerSubscriptionWithBackend(), timeout]);
+    } catch (err) {
+      beacon("error", err instanceof Error ? err.message : String(err));
+    } finally {
+      inFlightRegister = null;
+    }
+  })();
+  return inFlightRegister;
 }
 
 export function usePushNotifications() {
