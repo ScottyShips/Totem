@@ -34,6 +34,37 @@ async function registerSubscriptionWithBackend(): Promise<void> {
     return;
   }
 
+  // TEMPORARY DIAGNOSTIC — probe SW registration state before awaiting ready,
+  // so we can tell "never registered" apart from "registered but not active".
+  try {
+    const existing = await navigator.serviceWorker.getRegistration();
+    if (existing) {
+      const snapshot = {
+        scope: existing.scope,
+        installing: existing.installing?.state ?? null,
+        waiting: existing.waiting?.state ?? null,
+        active: existing.active?.state ?? null,
+      };
+      beacon("existing-registration", JSON.stringify(snapshot));
+    } else {
+      beacon("no-registration");
+      try {
+        const fresh = await navigator.serviceWorker.register("/sw.js");
+        beacon("explicit-register-ok", `scope=${fresh.scope}`);
+      } catch (err) {
+        beacon(
+          "explicit-register-failed",
+          err instanceof Error ? `${err.name}: ${err.message}` : String(err),
+        );
+      }
+    }
+  } catch (err) {
+    beacon(
+      "registration-probe-failed",
+      err instanceof Error ? `${err.name}: ${err.message}` : String(err),
+    );
+  }
+
   beacon("awaiting-sw-ready");
   const reg = await navigator.serviceWorker.ready;
   beacon("sw-ready");
