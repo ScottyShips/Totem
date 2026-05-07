@@ -11,6 +11,8 @@ from sqlalchemy.orm import selectinload
 from app.core.config import settings
 from app.models.group import Group, GroupMember
 from app.models.invitation import Invitation
+from app.models.user import User
+from app.services import push_service
 
 
 class TwilioError(Exception):
@@ -128,4 +130,30 @@ async def accept_invitation(
     await db.refresh(member)
 
     logger.info("Invitation {} accepted by user {}", invitation.id, user_id)
+
+    await _notify_inviter_of_accept(db, invitation, user_id)
+
     return member
+
+
+async def _notify_inviter_of_accept(
+    db: AsyncSession, invitation: Invitation, accepter_id: uuid.UUID
+) -> None:
+    """Push 'X joined <group>!' to the user who sent the invitation.
+    Best-effort; never raises.
+    """
+    try:
+        # invitation.group is already eager-loaded by get_invitation_by_token
+        accepter = await db.get(User, accepter_id)
+        if accepter is None:
+            return
+
+        await push_service.send_to_users(
+            db,
+            [invitation.invited_by],
+            title=f"{accepter.display_name} joined {invitation.group.name}!",
+            body="Tap to see the group",
+            url=f"/groups/{invitation.group_id}",
+        )
+    except Exception as exc:
+        logger.warning("Failed to notify inviter of acceptance: {}", str(exc))

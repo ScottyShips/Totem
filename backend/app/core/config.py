@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     spotify_client_id: str | None = None
     spotify_client_secret: str | None = None
 
+    # Web Push (VAPID). Generate via: python -m scripts.gen_vapid_keys
+    vapid_public_key: str | None = None
+    vapid_private_key: str | None = None
+    vapid_subject: str = "mailto:trevor@usetotem.app"
+
     frontend_url: str = "http://localhost:3000"
 
     @field_validator("database_url")

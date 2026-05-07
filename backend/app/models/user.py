@@ -21,3 +21,6 @@ class User(Base):
     group_memberships: Mapped[list["GroupMember"]] = relationship(back_populates="user")
     schedules: Mapped[list["UserSchedule"]] = relationship(back_populates="user")
     invitations_sent: Mapped[list["Invitation"]] = relationship(back_populates="invited_by_user")
+    push_subscriptions: Mapped[list["PushSubscription"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )

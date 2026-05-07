@@ -11,7 +11,7 @@ from sqlalchemy import text
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal
 from app.core.limiter import limiter
-from app.routers import artists, auth, festivals, groups, invitations, schedules, users
+from app.routers import artists, auth, festivals, groups, invitations, push, schedules, users
 
 
 @asynccontextmanager
@@ -60,6 +60,7 @@ app.include_router(festivals.router, prefix="/api/v1")
 app.include_router(schedules.router, prefix="/api/v1")
 app.include_router(invitations.router, prefix="/api/v1")
 app.include_router(artists.router, prefix="/api/v1")
+app.include_router(push.router, prefix="/api/v1")
 
 
 @app.get("/health", include_in_schema=False)
