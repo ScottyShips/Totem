@@ -9,6 +9,7 @@ import PerformanceRow from "@/components/schedule/PerformanceRow";
 import StatusSheet from "@/components/schedule/StatusSheet";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useSchedule } from "@/hooks/useSchedule";
+import { ApiError, apiDownload } from "@/lib/api";
 import { computeUserConflicts, findConflictsFor } from "@/lib/conflicts";
 import type { Performance } from "@/types";
 
@@ -63,6 +64,8 @@ function ScheduleContent({ groupId, gfId }: { groupId: string; gfId: string }) {
   const { shouldPrompt, requestPermission, dismiss } = usePushNotifications();
   const [showPushPrompt, setShowPushPrompt] = useState(false);
   const [selected, setSelected] = useState<Performance | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   // Show push prompt 5 s after the schedule loads — contextually relevant moment
   useEffect(() => {
@@ -110,6 +113,27 @@ function ScheduleContent({ groupId, gfId }: { groupId: string; gfId: string }) {
     ? (schedules.find((s) => s.performance_id === selected.id && s.user_id === currentUserId) ?? null)
     : null;
 
+  const attendingCount = schedules.filter(
+    (s) => s.user_id === currentUserId && s.status === "attending",
+  ).length;
+
+  const handleExport = async () => {
+    if (!festival) return;
+    setExportError(null);
+    setExporting(true);
+    try {
+      const slug = festival.slug || festival.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      await apiDownload(
+        `/api/v1/group-festivals/${gfId}/schedule.ics`,
+        `${slug}-totem.ics`,
+      );
+    } catch (err) {
+      setExportError(err instanceof ApiError ? err.message : "Export failed");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-zinc-950 px-4 py-8 max-w-lg mx-auto">
       <Link
@@ -129,6 +153,26 @@ function ScheduleContent({ groupId, gfId }: { groupId: string; gfId: string }) {
           <p className="text-zinc-700 text-xs mt-2">
             Synced {formatSyncTime(lastSyncedAt)}
           </p>
+        )}
+
+        {attendingCount > 0 && (
+          <div className="mt-4">
+            <button
+              onClick={handleExport}
+              disabled={exporting}
+              className="inline-flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-200 text-xs font-medium rounded-lg px-3 py-1.5 transition-colors disabled:opacity-50"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+              </svg>
+              {exporting
+                ? "Exporting…"
+                : `Save ${attendingCount} ${attendingCount === 1 ? "show" : "shows"} to calendar`}
+            </button>
+            {exportError && (
+              <p className="text-rose-400 text-xs mt-2">{exportError}</p>
+            )}
+          </div>
         )}
       </div>
 

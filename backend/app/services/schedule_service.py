@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.models.performance import Performance
 from app.models.schedule import UserSchedule
 
 
@@ -28,6 +29,31 @@ async def get_my_schedule(db: AsyncSession, gf_id: uuid.UUID, user_id: uuid.UUID
         )
         .options(selectinload(UserSchedule.user))
         .order_by(UserSchedule.updated_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+async def get_my_attending_with_details(
+    db: AsyncSession, gf_id: uuid.UUID, user_id: uuid.UUID
+) -> list[UserSchedule]:
+    """Returns the user's 'attending' schedule entries for this group festival,
+    with `performance.artist` and `performance.stage` eagerly loaded — used by
+    the ICS export endpoint. Ordered by performance start time so VEVENTs are
+    chronological.
+    """
+    result = await db.execute(
+        select(UserSchedule)
+        .join(UserSchedule.performance)
+        .where(
+            UserSchedule.group_festival_id == gf_id,
+            UserSchedule.user_id == user_id,
+            UserSchedule.status == "attending",
+        )
+        .options(
+            selectinload(UserSchedule.performance).selectinload(Performance.artist),
+            selectinload(UserSchedule.performance).selectinload(Performance.stage),
+        )
+        .order_by(Performance.start_time.asc())
     )
     return list(result.scalars().all())
 

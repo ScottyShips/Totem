@@ -1,7 +1,8 @@
+import re
 import uuid
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -17,7 +18,7 @@ from app.schemas.schedule import (
     UserScheduleResponse,
     UserScheduleUpdate,
 )
-from app.services import schedule_service
+from app.services import ics_service, schedule_service
 
 router = APIRouter(prefix="/group-festivals", tags=["schedules"])
 
@@ -27,6 +28,29 @@ async def get_group_festival(
     gf: GroupFestival = Depends(require_gf_member),
 ) -> GroupFestivalResponse:
     return GroupFestivalResponse.model_validate(gf)
+
+
+@router.get(
+    "/{gf_id}/schedule.ics",
+    response_class=Response,
+    status_code=status.HTTP_200_OK,
+    responses={200: {"content": {"text/calendar": {}}}},
+)
+async def download_schedule_ics(
+    gf: GroupFestival = Depends(require_gf_member),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    entries = await schedule_service.get_my_attending_with_details(db, gf.id, current_user.id)
+    body = ics_service.build_ics(gf.festival, entries)
+
+    safe_slug = re.sub(r"[^A-Za-z0-9._-]+", "-", gf.festival.name).strip("-").lower() or "festival"
+    filename = f"{safe_slug}-totem.ics"
+    return Response(
+        content=body,
+        media_type="text/calendar; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.get("/{gf_id}/schedules", response_model=UserScheduleListResponse, status_code=status.HTTP_200_OK)

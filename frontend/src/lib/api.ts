@@ -58,3 +58,28 @@ export async function apiFetch<T>(
 
   return response.json() as Promise<T>;
 }
+
+/**
+ * Authenticated download — fetches the resource as a Blob and triggers a
+ * browser download with the given filename. Used for ICS exports.
+ */
+export async function apiDownload(path: string, filename: string): Promise<void> {
+  const headers: Record<string, string> = {};
+  if (_accessToken) headers["Authorization"] = `Bearer ${_accessToken}`;
+
+  const response = await fetch(`${API_BASE}${path}`, { headers });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({ detail: "Download failed" }));
+    throw new ApiError(response.status, payload.detail ?? "Download failed");
+  }
+
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
