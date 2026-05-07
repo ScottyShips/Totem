@@ -103,11 +103,17 @@ async function registerSubscriptionWithBackend(): Promise<void> {
       beacon("vapid-empty");
       return;
     }
-    beacon("vapid-fetched");
+    beacon("vapid-fetched", `len=${public_key.length}`);
+
+    const keyBytes = urlBase64ToUint8Array(public_key);
+    beacon(
+      "vapid-decoded",
+      `bytes=${keyBytes.length} first=0x${keyBytes[0]?.toString(16) ?? "??"}`,
+    );
 
     sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(public_key) as BufferSource,
+      applicationServerKey: keyBytes as BufferSource,
     });
     beacon("subscribed");
   }
