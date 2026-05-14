@@ -15,7 +15,8 @@ interface Props {
   onRemove: (performanceId: string) => Promise<void>;
 }
 
-function formatTimeRange(startIso: string, endIso: string): string {
+function formatTimeRange(startIso: string | null, endIso: string | null): string {
+  if (!startIso || !endIso) return "Time TBD";
   const opts: Intl.DateTimeFormatOptions = { hour: "numeric", minute: "2-digit", hour12: true };
   return `${new Date(startIso).toLocaleTimeString("en-US", opts)}–${new Date(endIso).toLocaleTimeString("en-US", opts)}`;
 }

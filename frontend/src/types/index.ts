@@ -94,8 +94,10 @@ export interface Performance {
   festival_id: string;
   stage_id: string;
   artist_id: string;
-  start_time: string;
-  end_time: string;
+  // Null when the lineup has been announced but set-times haven't dropped yet.
+  // UI renders TBD; conflict detection skips them.
+  start_time: string | null;
+  end_time: string | null;
   stage: Stage;
   artist: Artist;
 }

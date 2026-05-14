@@ -27,6 +27,11 @@ function formatTime(iso: string): string {
   });
 }
 
+function formatTimeSlot(start: string | null, end: string | null): string {
+  if (!start || !end) return "Time TBD";
+  return `${formatTime(start)}–${formatTime(end)}`;
+}
+
 const STATUS_LABEL: Record<ScheduleStatus, string> = {
   attending: "Going",
   maybe: "Maybe",
@@ -72,7 +77,7 @@ export default function PerformanceRow({ performance, schedules, currentUserId, 
           <p className="text-xs mt-1 flex items-center gap-1.5">
             <span className="text-spark-300 font-semibold">{performance.stage.name}</span>
             <span className="text-midnight-600">·</span>
-            <span className="text-sunset-300 font-medium tabular-nums">{formatTime(performance.start_time)}–{formatTime(performance.end_time)}</span>
+            <span className={`font-medium tabular-nums ${performance.start_time ? "text-sunset-300" : "text-midnight-300 italic"}`}>{formatTimeSlot(performance.start_time, performance.end_time)}</span>
           </p>
         </div>
 

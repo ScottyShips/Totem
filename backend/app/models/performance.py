@@ -27,8 +27,10 @@ class Performance(Base):
     festival_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("festivals.id"), index=True)
     stage_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("stages.id"), index=True)
     artist_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("artists.id"), index=True)
-    start_time: Mapped[datetime]
-    end_time: Mapped[datetime]
+    # Times are nullable so we can seed an announced lineup before set-times are
+    # published. UI renders these as "TBD" and conflict logic skips them.
+    start_time: Mapped[datetime | None]
+    end_time: Mapped[datetime | None]
 
     festival: Mapped["Festival"] = relationship(back_populates="performances")
     stage: Mapped["Stage"] = relationship(back_populates="performances")

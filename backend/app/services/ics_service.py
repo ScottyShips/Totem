@@ -52,6 +52,10 @@ def build_ics(festival: Festival, attending_schedules: list[UserSchedule]) -> st
 
     for entry in attending_schedules:
         perf = entry.performance
+        # Skip performances without scheduled times — they're TBD and can't
+        # become valid VEVENTs. Calendar apps reject events with no DTSTART.
+        if perf.start_time is None or perf.end_time is None:
+            continue
         artist_name = perf.artist.name
         stage_name = perf.stage.name
         location = f"{stage_name} · {festival.location}"

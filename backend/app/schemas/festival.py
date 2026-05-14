@@ -30,8 +30,8 @@ class PerformanceResponse(BaseModel):
     model_config = {"from_attributes": True}
 
     id: uuid.UUID
-    start_time: datetime
-    end_time: datetime
+    start_time: datetime | None
+    end_time: datetime | None
     stage: StageResponse
     artist: ArtistResponse
 

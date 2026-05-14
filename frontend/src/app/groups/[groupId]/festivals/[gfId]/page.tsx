@@ -25,10 +25,14 @@ export default function SchedulePage({
   );
 }
 
+// Sentinel key for performances without scheduled times. Sorted to the end of
+// the day list (any literal date "YYYY-MM-DD" compares less than "TBD" lexically).
+const TBD_DAY_KEY = "TBD";
+
 function groupByDay(performances: Performance[]): [string, Performance[]][] {
   const map = new Map<string, Performance[]>();
   for (const p of performances) {
-    const day = p.start_time.slice(0, 10);
+    const day = p.start_time ? p.start_time.slice(0, 10) : TBD_DAY_KEY;
     if (!map.has(day)) map.set(day, []);
     map.get(day)!.push(p);
   }
@@ -36,6 +40,7 @@ function groupByDay(performances: Performance[]): [string, Performance[]][] {
 }
 
 function formatDayHeading(dateStr: string): string {
+  if (dateStr === TBD_DAY_KEY) return "Day TBD";
   // noon avoids DST edge cases shifting the date
   return new Date(`${dateStr}T12:00:00`).toLocaleDateString("en-US", {
     weekday: "long",
@@ -213,7 +218,17 @@ function ScheduleContent({ groupId, gfId }: { groupId: string; gfId: string }) {
             <div className="space-y-2">
               {perfs
                 .slice()
-                .sort((a, b) => a.start_time.localeCompare(b.start_time))
+                .sort((a, b) => {
+                  // Sort by time when both have times; null times sink to the
+                  // bottom of their day. Tie-break alphabetically by artist so
+                  // a wall of TBD entries reads as a sensible list.
+                  if (a.start_time && b.start_time) {
+                    const cmp = a.start_time.localeCompare(b.start_time);
+                    if (cmp !== 0) return cmp;
+                  } else if (a.start_time) return -1;
+                  else if (b.start_time) return 1;
+                  return a.artist.name.localeCompare(b.artist.name);
+                })
                 .map((perf) => (
                   <PerformanceRow
                     key={perf.id}
