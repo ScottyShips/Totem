@@ -70,7 +70,7 @@ STAGE_TBA = {"name": "Stage TBA", "description": "Stage assignment will be annou
 LINEUP: dict[date, list[str]] = {
     date(2026, 6, 25): [
         "ALLEYCVT",
-        "All Go Collective",
+        "ALL:LO Collective",
         "Bardo",
         "Bipolar Sunshine",
         "Close Friends Only",
@@ -84,7 +84,7 @@ LINEUP: dict[date, list[str]] = {
         "Eli Brown",
         "Excision",
         "Ganja White Night",
-        "HEDEX",
+        "HERSHE",
         "Jackie Hollander",
         "Jkyl & Hyde",
         "LSD Clownsystem",
@@ -179,7 +179,7 @@ LINEUP: dict[date, list[str]] = {
         "Kaskade",
         "Lane 8",
         "LSDREAM",
-        "Liam Goldfish",
+        "LIGHTCODE",
         "Mary Droppinz",
         "MPH",
         "OMNOM",
